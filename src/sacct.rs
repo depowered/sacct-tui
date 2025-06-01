@@ -1,6 +1,5 @@
 use serde::Deserialize;
-use std::process::Stdio;
-use tokio::process::Command;
+use std::process::{Command, Stdio};
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct SacctData {
@@ -53,7 +52,7 @@ impl SacctData {
     }
 }
 
-pub async fn fetch_sacct_data(
+pub fn fetch_sacct_data(
     additional_args: Option<String>,
 ) -> Result<Vec<SacctData>, Box<dyn std::error::Error>> {
     let mut cmd = Command::new("sacct");
@@ -72,8 +71,7 @@ pub async fn fetch_sacct_data(
     let output = cmd
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
-        .output()
-        .await?;
+        .output()?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);

@@ -26,7 +26,6 @@ This is a Rust terminal UI (TUI) application that provides an interactive interf
 - `clap`: Command line argument parsing with derive feature
 - `serde`: Serialization framework with derive feature
 - `chrono`: Date and time handling
-- `tokio`: Async runtime with full features
 
 ## Development Commands
 

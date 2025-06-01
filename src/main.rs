@@ -44,8 +44,8 @@ impl App {
         Self::default()
     }
 
-    async fn load_jobs(&mut self, args: Option<String>) -> Result<(), Box<dyn std::error::Error>> {
-        self.jobs = sacct::fetch_sacct_data(args).await?;
+    fn load_jobs(&mut self, args: Option<String>) -> Result<(), Box<dyn std::error::Error>> {
+        self.jobs = sacct::fetch_sacct_data(args)?;
         Ok(())
     }
 
@@ -70,8 +70,7 @@ impl App {
     }
 }
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
     
     setup_panic_hook();
@@ -83,10 +82,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut terminal = Terminal::new(backend)?;
 
     let mut app = App::new();
-    let result = app.load_jobs(cli.sacct_args).await;
+    let result = app.load_jobs(cli.sacct_args);
     
     let app_result = match result {
-        Ok(()) => run_app(&mut terminal, &mut app).await,
+        Ok(()) => run_app(&mut terminal, &mut app),
         Err(e) => Err(io::Error::new(io::ErrorKind::Other, e.to_string())),
     };
 
@@ -103,7 +102,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn run_app<B: ratatui::backend::Backend>(
+fn run_app<B: ratatui::backend::Backend>(
     terminal: &mut Terminal<B>,
     app: &mut App,
 ) -> io::Result<()> {
