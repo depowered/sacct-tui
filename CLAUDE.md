@@ -45,6 +45,9 @@ The application executes `sacct` with predefined formatting options and displays
 ## Slurm Integration
 
 The application calls `sacct` with specific formatting:
-- `--format=JobID,JobName,Partition,Account,AllocCPUS,State,ExitCode,Start,End,Elapsed,Timelimit,Submit,User,WorkDir`
-- `--parsable2`: Pipe-delimited output
-- `--noheader`: Excludes column headers from output
+- `--format=JobID,JobName,User,Start,End,Elapsed,Timelimit,State,NNodes,ExitCode,NodeList,ReqCPUS,ReqMem,MaxRSS,UserCPU`
+- `--user=$USER`: Only return jobs submitted by the current user
+- `--allocations`: Only return job allocation lines
+- `--parsable2 --delimiter=','`: CSV output
+
+Example sacct output is stored in `example-sacct-allocations-output.csv`.
