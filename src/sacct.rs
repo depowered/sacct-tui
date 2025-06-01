@@ -1,52 +1,43 @@
+use csv::ReaderBuilder;
 use serde::Deserialize;
 use std::fs;
 use std::process::{Command, Stdio};
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct SacctData {
+    #[serde(rename = "JobID")]
     pub job_id: String,
+    #[serde(rename = "JobName")]
     pub job_name: String,
+    #[serde(rename = "User")]
     pub user: String,
+    #[serde(rename = "Start")]
     pub start: String,
+    #[serde(rename = "End")]
     pub end: String,
+    #[serde(rename = "Elapsed")]
     pub elapsed: String,
+    #[serde(rename = "Timelimit")]
     pub time_limit: String,
+    #[serde(rename = "State")]
     pub state: String,
+    #[serde(rename = "NNodes")]
     pub n_nodes: String,
+    #[serde(rename = "ExitCode")]
     pub exit_code: String,
+    #[serde(rename = "NodeList")]
     pub node_list: String,
+    #[serde(rename = "ReqCPUS")]
     pub req_cpus: String,
+    #[serde(rename = "ReqMem")]
     pub req_mem: String,
+    #[serde(rename = "MaxRSS")]
     pub max_rss: String,
+    #[serde(rename = "UserCPU")]
     pub user_cpu: String,
 }
 
 impl SacctData {
-    pub fn from_line(line: &str) -> Option<Self> {
-        let fields: Vec<&str> = line.split(',').collect();
-        if fields.len() >= 15 {
-            Some(SacctData {
-                job_id: fields[0].to_string(),
-                job_name: fields[1].to_string(),
-                user: fields[2].to_string(),
-                start: fields[3].to_string(),
-                end: fields[4].to_string(),
-                elapsed: fields[5].to_string(),
-                time_limit: fields[6].to_string(),
-                state: fields[7].to_string(),
-                n_nodes: fields[8].to_string(),
-                exit_code: fields[9].to_string(),
-                node_list: fields[10].to_string(),
-                req_cpus: fields[11].to_string(),
-                req_mem: fields[12].to_string(),
-                max_rss: fields[13].to_string(),
-                user_cpu: fields.get(14).unwrap_or(&"").to_string(),
-            })
-        } else {
-            None
-        }
-    }
-
     pub fn display_line(&self) -> String {
         format!(
             "{:<12} {:<20} {:<10} {:<12} {:<8}",
@@ -59,7 +50,7 @@ pub fn fetch_sacct_data(
     additional_args: Option<String>,
 ) -> Result<Vec<SacctData>, Box<dyn std::error::Error>> {
     let mut cmd = Command::new("sacct");
-    
+
     cmd.args([
         "--format=JobID,JobName,User,Start,End,Elapsed,Timelimit,State,NNodes,ExitCode,NodeList,ReqCPUS,ReqMem,MaxRSS,UserCPU",
         "--user=$USER",
@@ -74,10 +65,7 @@ pub fn fetch_sacct_data(
         cmd.args(arg_parts);
     }
 
-    let output = cmd
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .output()?;
+    let output = cmd.stdout(Stdio::piped()).stderr(Stdio::piped()).output()?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
@@ -85,29 +73,32 @@ pub fn fetch_sacct_data(
     }
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    let jobs: Vec<SacctData> = stdout
-        .lines()
-        .filter_map(SacctData::from_line)
-        .collect();
-
-    Ok(jobs)
+    parse_csv_data(&stdout)
 }
 
 pub fn read_csv_file(file_path: &str) -> Result<Vec<SacctData>, Box<dyn std::error::Error>> {
-    let content = fs::read_to_string(file_path)?;
-    let mut lines: Vec<&str> = content.lines().collect();
-    
-    // Check if first line looks like headers (contains field names we expect)
-    if !lines.is_empty() && is_header_line(lines[0]) {
-        lines.remove(0); // Remove header line
+    let file_content = fs::read_to_string(file_path)?;
+    parse_csv_data(&file_content)
+}
+
+fn parse_csv_data(csv_content: &str) -> Result<Vec<SacctData>, Box<dyn std::error::Error>> {
+    // Check if first line looks like headers
+    let has_headers = csv_content
+        .lines()
+        .next()
+        .map(is_header_line)
+        .unwrap_or(false);
+
+    let mut reader = ReaderBuilder::new()
+        .has_headers(has_headers)
+        .from_reader(csv_content.as_bytes());
+
+    let mut jobs = Vec::new();
+    for result in reader.deserialize() {
+        let job: SacctData = result?;
+        jobs.push(job);
     }
-    
-    let jobs: Vec<SacctData> = lines
-        .into_iter()
-        .filter(|line| !line.trim().is_empty())
-        .filter_map(SacctData::from_line)
-        .collect();
-    
+
     Ok(jobs)
 }
 

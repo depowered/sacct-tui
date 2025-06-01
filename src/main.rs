@@ -1,12 +1,12 @@
 use clap::Parser;
 use ratatui::{
+    Terminal,
     backend::CrosstermBackend,
     crossterm::{
         event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
         execute,
-        terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+        terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
     },
-    Terminal,
 };
 use std::{io, panic};
 
@@ -30,7 +30,7 @@ fn setup_panic_hook() {
 struct Cli {
     #[arg(long, help = "Additional sacct arguments")]
     sacct_args: Option<String>,
-    
+
     #[arg(long, help = "Path to CSV file to use instead of calling sacct")]
     csv_file: Option<String>,
 }
@@ -47,7 +47,11 @@ impl App {
         Self::default()
     }
 
-    fn load_jobs(&mut self, args: Option<String>, csv_file: Option<String>) -> Result<(), Box<dyn std::error::Error>> {
+    fn load_jobs(
+        &mut self,
+        args: Option<String>,
+        csv_file: Option<String>,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         self.jobs = if let Some(file_path) = csv_file {
             sacct::read_csv_file(&file_path)?
         } else {
@@ -79,9 +83,9 @@ impl App {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
-    
+
     setup_panic_hook();
-    
+
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
@@ -90,7 +94,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut app = App::new();
     let result = app.load_jobs(cli.sacct_args, cli.csv_file);
-    
+
     let app_result = match result {
         Ok(()) => run_app(&mut terminal, &mut app),
         Err(e) => Err(io::Error::new(io::ErrorKind::Other, e.to_string())),

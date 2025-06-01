@@ -1,8 +1,8 @@
 use ratatui::{
+    Frame,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     widgets::{Block, Borders, Clear, List, ListItem, Paragraph, Wrap},
-    Frame,
 };
 
 use crate::App;
@@ -29,7 +29,11 @@ pub fn draw(f: &mut Frame, app: &App) {
 
 fn draw_header(f: &mut Frame, area: Rect) {
     let header = Paragraph::new("Slurm sacct TUI")
-        .style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD))
+        .style(
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        )
         .block(Block::default().borders(Borders::ALL).title("Header"));
     f.render_widget(header, area);
 }
@@ -50,11 +54,11 @@ fn draw_job_list(f: &mut Frame, area: Rect, app: &App) {
         .collect();
 
     let list = List::new(items)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title(format!("Jobs ({}/{})", app.selected + 1, app.jobs.len())),
-        )
+        .block(Block::default().borders(Borders::ALL).title(format!(
+            "Jobs ({}/{})",
+            app.selected + 1,
+            app.jobs.len()
+        )))
         .style(Style::default().fg(Color::White));
 
     f.render_widget(list, area);
