@@ -1,4 +1,5 @@
 use serde::Deserialize;
+use std::fs;
 use std::process::{Command, Stdio};
 
 #[derive(Debug, Clone, Deserialize)]
@@ -90,4 +91,28 @@ pub fn fetch_sacct_data(
         .collect();
 
     Ok(jobs)
+}
+
+pub fn read_csv_file(file_path: &str) -> Result<Vec<SacctData>, Box<dyn std::error::Error>> {
+    let content = fs::read_to_string(file_path)?;
+    let mut lines: Vec<&str> = content.lines().collect();
+    
+    // Check if first line looks like headers (contains field names we expect)
+    if !lines.is_empty() && is_header_line(lines[0]) {
+        lines.remove(0); // Remove header line
+    }
+    
+    let jobs: Vec<SacctData> = lines
+        .into_iter()
+        .filter(|line| !line.trim().is_empty())
+        .filter_map(SacctData::from_line)
+        .collect();
+    
+    Ok(jobs)
+}
+
+fn is_header_line(line: &str) -> bool {
+    let lower_line = line.to_lowercase();
+    // Check if line contains expected header field names
+    lower_line.contains("jobid") || lower_line.contains("jobname") || lower_line.contains("state")
 }

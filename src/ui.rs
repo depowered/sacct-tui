@@ -75,32 +75,34 @@ fn draw_job_details(f: &mut Frame, app: &App) {
         let details = format!(
             "Job ID: {}\n\
              Job Name: {}\n\
-             Partition: {}\n\
-             Account: {}\n\
-             Allocated CPUs: {}\n\
-             State: {}\n\
-             Exit Code: {}\n\
+             User: {}\n\
              Start Time: {}\n\
              End Time: {}\n\
              Elapsed: {}\n\
              Time Limit: {}\n\
-             Submit Time: {}\n\
-             User: {}\n\
-             Work Directory: {}",
+             State: {}\n\
+             Nodes: {}\n\
+             Exit Code: {}\n\
+             Node List: {}\n\
+             Requested CPUs: {}\n\
+             Requested Memory: {}\n\
+             Max RSS: {}\n\
+             User CPU Time: {}",
             job.job_id,
             job.job_name,
-            job.partition,
-            job.account,
-            job.alloc_cpus,
-            job.state,
-            job.exit_code,
+            job.user,
             job.start,
             job.end,
             job.elapsed,
             job.time_limit,
-            job.submit,
-            job.user,
-            job.work_dir
+            job.state,
+            job.n_nodes,
+            job.exit_code,
+            job.node_list,
+            job.req_cpus,
+            job.req_mem,
+            job.max_rss,
+            job.user_cpu
         );
 
         let popup = Paragraph::new(details)

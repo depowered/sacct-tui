@@ -30,6 +30,9 @@ fn setup_panic_hook() {
 struct Cli {
     #[arg(long, help = "Additional sacct arguments")]
     sacct_args: Option<String>,
+    
+    #[arg(long, help = "Path to CSV file to use instead of calling sacct")]
+    csv_file: Option<String>,
 }
 
 #[derive(Default)]
@@ -44,8 +47,12 @@ impl App {
         Self::default()
     }
 
-    fn load_jobs(&mut self, args: Option<String>) -> Result<(), Box<dyn std::error::Error>> {
-        self.jobs = sacct::fetch_sacct_data(args)?;
+    fn load_jobs(&mut self, args: Option<String>, csv_file: Option<String>) -> Result<(), Box<dyn std::error::Error>> {
+        self.jobs = if let Some(file_path) = csv_file {
+            sacct::read_csv_file(&file_path)?
+        } else {
+            sacct::fetch_sacct_data(args)?
+        };
         Ok(())
     }
 
@@ -82,7 +89,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut terminal = Terminal::new(backend)?;
 
     let mut app = App::new();
-    let result = app.load_jobs(cli.sacct_args);
+    let result = app.load_jobs(cli.sacct_args, cli.csv_file);
     
     let app_result = match result {
         Ok(()) => run_app(&mut terminal, &mut app),
